@@ -4,21 +4,34 @@ import sys
 
 dry_run = "--dry-run" in sys.argv
 
-files = Path(r"E:\python\garbage")
-excel_dir = Path(r"E:\python\excel")
-text_dir = Path(r"E:\python\text")
-picture_dir = Path(r"E:\python\picture") 
+base_path= Path(input(r"请输入要整理的目标文件夹路径：").strip("'").strip('"'))
+files = base_path
+excel_dir = base_path / 'excel'
+music_dir = base_path / 'music' 
+text_dir = base_path / 'text'
+img_dir = base_path / 'img'
+pdf_dir = base_path / 'pdf'
+ppt_dir = base_path / 'ppt'
+zip_dir = base_path / 'zip'
 
 for file in files.iterdir():
     if not file.is_file():
          continue
     ext = file.suffix.lower()
-    if ext == '.xlsx':
+    if ext in ['.xlsx','.xls','.csv','.docx','doc']:
         target_dir = excel_dir
-    elif ext == '.txt':
+    elif ext in ['.mp3','.mp4','.mkv']:
+            target_dir = music_dir
+    elif ext in ['.txt']:
         target_dir = text_dir
-    elif ext in['.jpg' or '.jpeg' or '.png' or '.gif']:
-        target_dir = picture_dir
+    elif ext in['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+        target_dir = img_dir
+    elif ext in ['.pdf']:
+            target_dir = pdf_dir    
+    elif ext in ['.pptx','.ppt','pps','ppsx']:
+            target_dir = ppt_dir
+    elif ext in ['.zip','.rar','.7z']:
+            target_dir = zip_dir
     else:
         continue
 
