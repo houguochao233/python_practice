@@ -4,8 +4,7 @@ import sys
 
 dry_run = "--dry-run" in sys.argv
 
-base_path= Path(input(r"请输入要整理的目标文件夹路径：").strip("'").strip('"'))
-files = base_path
+files= Path(input(r"请输入要整理的目标文件夹路径：").strip("'").strip('"'))
 extension_map = {
     # 对应 excel_dir (保留了你代码中的原分类归属)
     ".xlsx": "excel",
@@ -38,8 +37,6 @@ extension_map = {
     ".7z": "zip",
 }
 
-
-
 for file in files.iterdir():
     if not file.is_file():
          continue
@@ -47,10 +44,10 @@ for file in files.iterdir():
 
     category = extension_map.get(ext)
     if not category:
-        print(f"{ext}未被包含")
+        print(f"{ext}格式未被包含")
         continue
 
-    target_dir = base_path / category
+    target_dir = files / category
     if not target_dir.exists():
         if dry_run:
             print(f"{target_dir}已创建")
@@ -59,10 +56,20 @@ for file in files.iterdir():
             print(f"{target_dir}已创建")
 
     target_path = target_dir / file.name
+
+    if target_path.exists:
+        stem = file.stem
+        suffix = file.suffix
+        count = 1
+        while target_path.exists():
+            print(f"{file}有重名文件,进行编号处理")
+            target_path = target_dir / f"{stem}_{count}{suffix}"
+            count += 1
+
     if dry_run:
         print(f"{file}已移动到{target_path}")
     else:
-        shutil.move(str(file),str(target_path))
+        shutil.move(file,target_path)
         print(f"{file}已移动到{target_path}")
         
     
