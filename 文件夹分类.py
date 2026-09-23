@@ -2,74 +2,127 @@ from pathlib import Path
 import shutil
 import sys
 
-dry_run = "--dry-run" in sys.argv
-
-files= Path(input(r"请输入要整理的目标文件夹路径：").strip("'").strip('"'))
 extension_map = {
-    # 对应 excel_dir (保留了你代码中的原分类归属)
+    # Excel
     ".xlsx": "excel",
     ".xls": "excel",
     ".csv": "excel",
-    ".docx": "excel",
-    ".doc": "excel",
-    # 对应 music_dir
-    ".mp3": "music",
-    ".mp4": "music",
-    ".mkv": "music",
-    # 对应 text_dir
+
+    # Word
+    ".docx": "word",
+    ".doc": "word",
+
+    # PowerPoint
+    ".pptx": "ppt",
+    ".ppt": "ppt",
+    ".pps": "ppt",
+    ".ppsx": "ppt",
+
+    # Text
     ".txt": "text",
-    # 对应 img_dir
+    ".md": "text",
+    ".log": "text",
+
+    # Image
     ".jpg": "img",
     ".jpeg": "img",
     ".png": "img",
     ".gif": "img",
     ".webp": "img",
-    # 对应 pdf_dir
+    ".bmp": "img",
+    ".svg": "img",
+
+    # Audio
+    ".mp3": "audio",
+    ".wav": "audio",
+    ".flac": "audio",
+
+    # Video
+    ".mp4": "video",
+    ".mkv": "video",
+    ".avi": "video",
+    ".mov": "video",
+
+    # PDF
     ".pdf": "pdf",
-    # 对应 ppt_dir
-    ".pptx": "ppt",
-    ".ppt": "ppt",
-    ".pps": "ppt",
-    ".ppsx": "ppt",
-    # 对应 zip_dir
+
+    # Archive
     ".zip": "zip",
     ".rar": "zip",
     ".7z": "zip",
 }
 
-for file in files.iterdir():
-    if not file.is_file():
-         continue
-    ext = file.suffix.lower()
+def get_unique(target_dir,file): #判断文件重复，并返回带编号重复文件路径
+    target_path = target_dir / file.name #样本将要移入的目标路径
+    if not target_path.exists():
+        return target_path
 
-    category = extension_map.get(ext)
-    if not category:
-        print(f"{ext}格式未被包含")
-        continue
+    count = 1
 
-    target_dir = files / category
+    while True:
+        target_path = target_dir / f"{file.stem}_{count}{file.suffix}"
+
+        if not target_path.exists(): #判断是否重名
+            return target_path    
+        count += 1
+
+
+def move_file(file,target_dir,dry_run=False):
     if not target_dir.exists():
         if dry_run:
-            print(f"{target_dir}已创建")
+            print(f"[预览]{target_dir}已创建")
         else:
             target_dir.mkdir(parents = True,exist_ok = True)
             print(f"{target_dir}已创建")
 
-    target_path = target_dir / file.name
-
-    if target_path.exists:
-        stem = file.stem
-        suffix = file.suffix
-        count = 1
-        while target_path.exists():
-            print(f"{file}有重名文件,进行编号处理")
-            target_path = target_dir / f"{stem}_{count}{suffix}"
-            count += 1
+    target_path = get_unique(target_dir,file)
 
     if dry_run:
-        print(f"{file}已移动到{target_path}")
+        print(f"[预览]{file}已移动到{target_path}")
     else:
         shutil.move(file,target_path)
         print(f"{file}已移动到{target_path}")
-        
+    return True
+
+def orginaze_files(files,extension_map,dry_run = False):
+    stats = {}
+    
+    for file in files.iterdir():
+        if not file.is_file():
+            continue
+        ext = file.suffix.lower()     #获取后缀
+
+        category = extension_map.get(ext)#样本是否在词典中
+        if not category:
+            print(f"{ext}格式未被包含")
+            continue
+
+        target_dir = files / category#想要将样本移入的文件夹路径
+        success = move_file(file,target_dir)
+        if success :
+            stats[category] = stats.get(category,0)+1
+
+    return stats
+
+def main():
+    dry_run = "--dry-run" in sys.argv #测试代码
+    files= Path(input(r"请输入要整理的目标文件夹路径：").strip("'").strip('"'))
+    if not files.exists():
+        print(f"{files}不存在")
+        return
+    if not files.is_dir():
+        print(f"{files}不是文件夹")
+        return
+
+    total = 0
+
+    stats = orginaze_files(files,extension_map,dry_run=False)
+    for category,count in stats.items():
+        print(f"{category} : {count}份")
+        total += count
+    print(f"一共{total}份")
+
+if __name__ == "__main__":
+    main()
+     
     
